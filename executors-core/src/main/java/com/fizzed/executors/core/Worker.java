@@ -15,16 +15,14 @@
  */
 package com.fizzed.executors.core;
 
+import org.slf4j.Logger;
+
 public interface Worker {
     
-    String getName();
+    default Logger getLogger() {
+        return null;
+    }
     
-    WorkerState getState();
-
-    boolean isStopped();
-    
-    void stop();
-    
-    void execute() throws ExecuteStopException, InterruptedException;
+    void execute(WorkerContext context) throws ExecuteStopException, InterruptedException;
     
 }

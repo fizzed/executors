@@ -17,8 +17,9 @@ package com.fizzed.executors.core;
 
 public enum WorkerState {
  
+    INITIAL,            // not yet run (ever)
     IDLE,               // interrupting is okay
     RUNNING,            // running, gotta let it finish
-    STOPPED             // stop requested
+    STOPPED             // stopped
     
 }

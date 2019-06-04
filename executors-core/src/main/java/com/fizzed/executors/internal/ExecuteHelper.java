@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.fizzed.executors.core;
+package com.fizzed.executors.internal;
 
 import com.fizzed.crux.util.TimeDuration;
-import java.util.Random;
 
 public class ExecuteHelper {
- 
-    static private final Random RANDOM = new Random();
     
-    static public TimeDuration staggered(TimeDuration duration) {
-        long jitter = (long)Math.floor((double)duration.getDuration() * (double)0.5);
-        long leftLimit = duration.getDuration() - jitter;
-        long rightLimit = duration.getDuration() + jitter;
-        long staggeredDuration = leftLimit + (long) (Math.random() * (rightLimit - leftLimit));
+    static public final TimeDuration ZERO_DURATION = TimeDuration.nanos(0);
+    
+    static public TimeDuration staggered(TimeDuration duration, double percentage) {
+        if (duration == null || duration.isZero()) {
+            return duration;
+        }
+        
+        long deltaLimit = (long)Math.ceil((double)duration.getDuration() * percentage);
+        long leftLimit = duration.getDuration() - deltaLimit;
+        long rightLimit = duration.getDuration() + deltaLimit;
+        long staggeredDuration = leftLimit + (long)(Math.random() * (rightLimit - leftLimit));
         return new TimeDuration(staggeredDuration, duration.getUnit());
     }
     

@@ -15,12 +15,32 @@
  */
 package com.fizzed.executors.core;
 
-public interface Service {
- 
-    public ServiceState getState();
+import com.fizzed.crux.util.TimeDuration;
+
+public interface WorkerRunnable<W extends Worker> {
+
+    TimeDuration getInitialDelay();
+
+    void setInitialDelay(TimeDuration initialDelay);
     
-    public void start();
+    TimeDuration getExecuteDelay();
     
-    public void stop();
+    void setExecuteDelay(TimeDuration executeDelay);
+    
+    TimeDuration getUnhandledThrowableDelay();
+    
+    void setUnhandledThrowableDelay(TimeDuration unhandledThrowableDelay);
+    
+    String getName();
+
+    String getMessage();
+    
+    WorkerState getState();
+
+    W getWorker();
+
+    boolean isStopRequested();
+
+    void stop();
     
 }

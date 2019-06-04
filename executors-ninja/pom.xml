@@ -14,6 +14,18 @@
 
     <dependencies>
         
+        <dependency>
+            <groupId>com.fizzed</groupId>
+            <artifactId>executors-core</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.ninjaframework</groupId>
+            <artifactId>ninja-core</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        
         <!-- testing -->
 
         <dependency>

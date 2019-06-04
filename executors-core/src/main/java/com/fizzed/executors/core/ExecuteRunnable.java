@@ -15,12 +15,8 @@
  */
 package com.fizzed.executors.core;
 
-public interface Service {
- 
-    public ServiceState getState();
-    
-    public void start();
-    
-    public void stop();
+public interface ExecuteRunnable {
+
+    void run() throws ExecuteStopException, InterruptedException;
     
 }

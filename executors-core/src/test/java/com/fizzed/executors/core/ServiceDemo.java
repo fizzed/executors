@@ -16,62 +16,72 @@
 package com.fizzed.executors.core;
 
 import com.fizzed.crux.util.TimeDuration;
-import java.util.concurrent.TimeUnit;
+import static com.fizzed.crux.util.TimeDuration.millis;
+import static com.fizzed.crux.util.TimeDuration.seconds;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServiceDemo {
  
-    static public class Consumer extends AbstractWorker {
-
-        public Consumer(String name) {
-            super(name);
-        }
+    static public class Consumer implements Worker {
+        static private final Logger log = LoggerFactory.getLogger(Consumer.class);
 
         @Override
-        public void execute() throws ExecuteStopException, InterruptedException {
-            while (!this.isStopped()) {
-                this.running();
-
-                log.debug("Running for 5 sec (should be allowed to finish)");
-                Thread.sleep(5000L);
-                
-                this.idle(new TimeDuration(2, TimeUnit.SECONDS));
-            }
+        public Logger getLogger() {
+            return log;
         }
         
+        @Override
+        public void execute(WorkerContext context) throws ExecuteStopException, InterruptedException {
+            while (!context.isStopRequested()) {
+                context.running("Working!", () -> {
+                    TimeDuration workTime = seconds(5);
+                    log.debug("Running for {} (should be allowed to finish)", workTime);
+                    workTime.sleep();
+                });
+
+                context.idle(seconds(2));
+            }
+        }
+  
     }
     
-    static public class Consumers extends AbstractService<Consumer> {
+    static public class Consumers extends WorkerService<Consumer> {
 
-        public Consumers(int minPoolSize) {
-            super("Consumers", minPoolSize);
+        public Consumers() {
+            super("Consumers");
         }
 
         @Override
         public Consumer newWorker(String workerName) {
-            return new Consumer(workerName);
+            return new Consumer();
         }
         
     }
     
-    
-    
     static public void main(String[] args) throws Exception {
         
-        Consumers consumers = new Consumers(2);
-        consumers.setInitialDelay(new TimeDuration(3000, TimeUnit.MILLISECONDS));
+        Consumers consumers = new Consumers();
+        consumers.setMinPoolSize(2);
+        consumers.setInitialDelay(seconds(5));
+        consumers.setInitialDelayStagger(0.5d);
+        
         consumers.start();
         
 //        Thread.sleep(1000L);
-        Thread.sleep(4*1000L);
+        seconds(4).sleep();
         
         consumers.stop();
         
         
-        Thread.sleep(5000L);
+        seconds(5).sleep();
         
         consumers.start();
         
-        Thread.sleep(120*1000L);
+        
+        seconds(26).sleep();
+        
+        consumers.stop();
     }
     
 }

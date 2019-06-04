@@ -15,8 +15,10 @@
  */
 package com.fizzed.executors.core;
 
+import com.fizzed.executors.internal.ExecuteHelper;
 import com.fizzed.crux.util.StopWatch;
 import com.fizzed.crux.util.TimeDuration;
+import com.fizzed.executors.impl.WorkerRunnableImpl;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -26,32 +28,35 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractService<W extends AbstractWorker> implements Service {
+public abstract class WorkerService<W extends Worker> implements Service {
     
     protected Logger log;
     protected final AtomicInteger workerIds;
+    private final CopyOnWriteArrayList<WorkerRunnable<W>> runnables;
     protected AtomicReference<ServiceState> stateRef;
     protected ScheduledThreadPoolExecutor executors;
     private String name;
     private int minPoolSize;
     private TimeDuration shutdownTimeout;
     private TimeDuration initialDelay;
-    private boolean staggeredInitialDelay;
-    private CopyOnWriteArrayList<W> workers;
+    private Double initialDelayStagger;
+    private TimeDuration executeDelay;
+    private TimeDuration unhandledThrowableDelay;
     
-    public AbstractService(
-            String name,
-            int minPoolSize) {
+    public WorkerService(
+            String name) {
         
         this.workerIds = new AtomicInteger();
         this.stateRef = new AtomicReference<>(ServiceState.STOPPED);
         this.name = name;
-        this.minPoolSize = minPoolSize;
+        this.minPoolSize = 1;
         this.log = LoggerFactory.getLogger(this.getClass());
         this.shutdownTimeout = new TimeDuration(60, TimeUnit.SECONDS);
-        this.workers = new CopyOnWriteArrayList<>();
+        this.runnables = new CopyOnWriteArrayList<>();
         this.initialDelay = null;
-        this.staggeredInitialDelay = true;
+        this.initialDelayStagger = null;
+        this.executeDelay = null;
+        this.unhandledThrowableDelay = TimeDuration.seconds(5);
     }
 
     @Override
@@ -91,21 +96,56 @@ public abstract class AbstractService<W extends AbstractWorker> implements Servi
         this.initialDelay = initialDelay;
     }
 
-    public boolean isStaggeredInitialDelay() {
-        return staggeredInitialDelay;
+    public Double getInitialDelayStagger() {
+        return initialDelayStagger;
     }
 
-    public void setStaggeredInitialDelay(boolean staggeredInitialDelay) {
-        this.staggeredInitialDelay = staggeredInitialDelay;
+    public void setInitialDelayStagger(Double initialDelayStagger) {
+        this.initialDelayStagger = initialDelayStagger;
     }
-    
-    private W _newWorker() {
-        final int id = this.workerIds.incrementAndGet();
-        final String workerName = this.name + "-" + id;
-        return this.newWorker(workerName);
+
+    public TimeDuration getExecuteDelay() {
+        return executeDelay;
+    }
+
+    public void setExecuteDelay(TimeDuration executeDelay) {
+        this.executeDelay = executeDelay;
+    }
+
+    public TimeDuration getUnhandledThrowableDelay() {
+        return unhandledThrowableDelay;
+    }
+
+    public void setUnhandledThrowableDelay(TimeDuration unhandledThrowableDelay) {
+        this.unhandledThrowableDelay = unhandledThrowableDelay;
+    }
+
+    public List<WorkerRunnable<W>> getRunnables() {
+        return this.runnables;
     }
     
     abstract public W newWorker(String workerName);
+    
+    protected WorkerRunnableImpl<W> buildWorkerRunnable() {
+        final int id = this.workerIds.incrementAndGet();
+        
+        final String workerName = this.name + "-" + id;
+        
+        final W worker = this.newWorker(workerName);
+        
+        // build runnable that handles it
+        final WorkerRunnableImpl<W> runnable = new WorkerRunnableImpl<>(workerName, worker);
+
+        final TimeDuration _initialDelay = this.initialDelayStagger != null ?
+            ExecuteHelper.staggered(this.getInitialDelay(), this.initialDelayStagger)
+                : this.getInitialDelay();
+        
+        runnable.setInitialDelay(_initialDelay);
+        runnable.setExecuteDelay(this.getExecuteDelay());
+        runnable.setUnhandledThrowableDelay(this.getUnhandledThrowableDelay());
+        
+        return runnable;
+    }
     
     @Override
     public void start() {
@@ -117,6 +157,9 @@ public abstract class AbstractService<W extends AbstractWorker> implements Servi
         try {
             log.info("{}: service starting...", this.name);
 
+            // clear out any previous runnables
+            this.runnables.clear();
+            
             this.executors = new ScheduledThreadPoolExecutor(
                 this.minPoolSize, (Runnable runnable) -> {
                     Thread thread = new Thread(runnable);
@@ -125,19 +168,11 @@ public abstract class AbstractService<W extends AbstractWorker> implements Servi
                 });
             
             for (int i = 0; i < this.minPoolSize; i++) {
-                W worker = this._newWorker();
+                final WorkerRunnableImpl<W> runnable = this.buildWorkerRunnable();
                 
-                if (this.initialDelay != null) {
-                    if (this.staggeredInitialDelay) {
-                        worker.setInitialDelay(ExecuteHelper.staggered(this.initialDelay));
-                    } else {
-                        worker.setInitialDelay(this.initialDelay);
-                    }
-                }
-                
-                this.workers.add(worker);
+                this.runnables.add(runnable);
 
-                this.executors.submit(worker);
+                this.executors.submit(runnable);
             }
 
             log.info("{}: service started (in {})", this.name, timer);
@@ -159,8 +194,8 @@ public abstract class AbstractService<W extends AbstractWorker> implements Servi
             
             this.executors.shutdown();
             
-            this.workers.forEach(worker -> {
-                worker.stop();
+            this.runnables.forEach(runnable -> {
+                runnable.stop();
             });
             
             try {
@@ -171,7 +206,7 @@ public abstract class AbstractService<W extends AbstractWorker> implements Servi
             } catch (InterruptedException e) {
                 log.warn("{}: service interrupted while shutting down...", this.name, e);
                 log.warn("{}: service will now terminate with a likley un-orderly shutdown", this.name);
-                final List<Runnable> runnables = this.executors.shutdownNow();
+                this.executors.shutdownNow();
             }
             
             log.info("{}: service stopped (in {})", this.name, timer);

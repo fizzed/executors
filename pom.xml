@@ -14,7 +14,7 @@
     
     <properties>
         <java.version>1.8</java.version>
-        <crux.version>1.0.8</crux.version>
+        <crux.version>1.0.9-SNAPSHOT</crux.version>
     </properties>
 
     <scm>
@@ -42,6 +42,12 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>1.7.21</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>com.fizzed</groupId>
+                <artifactId>executors-core</artifactId>
+                <version>${project.version}</version>
             </dependency>
             
             <!-- testing -->
