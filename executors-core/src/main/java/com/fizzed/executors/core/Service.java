@@ -19,6 +19,10 @@ public interface Service {
  
     ServiceState getState();
     
+//    default boolean isDisabled() {
+//        return this.getState() == ServiceState.DISABLED;
+//    }
+    
     default boolean isStarted() {
         return this.getState() == ServiceState.STARTED;
     }

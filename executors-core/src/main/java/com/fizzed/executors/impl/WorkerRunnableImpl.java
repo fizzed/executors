@@ -190,7 +190,7 @@ public class WorkerRunnableImpl<W extends Worker> implements Runnable, WorkerRun
         if (hasDuration) {
             try {
                 String _message = maybe(message).orElse("idle (sleep)");
-                log.debug("{}: {} for {}", this.name, _message, duration);
+                log.trace("{}: {} for {}", this.name, _message, duration);
                 Thread.sleep(duration.asMillis());
             } catch (InterruptedException e) {
                 if (this.isStopRequested()) {
