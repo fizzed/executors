@@ -1,4 +1,4 @@
-Workers by Fizzed helps you build, manage, and operate long-lived executors (threads)
+Executors by Fizzed helps you build, manage, and operate long-lived workers (threads)
 on the JVM.
 
 Java's standard ExecutorService and its various implementations (correctly) hide where
