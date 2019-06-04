@@ -38,7 +38,7 @@ public class WorkerRunnableImplTest {
     public void executeStopped() {
         Worker worker = mock(Worker.class);
         
-        WorkerRunnableImpl runnable = spy(new WorkerRunnableImpl("test-1", worker));
+        WorkerRunnableImpl runnable = spy(new WorkerRunnableImpl(1, "test-1", worker));
         
         assertThat(runnable.getState(), is(WorkerState.INITIAL));
         
@@ -59,7 +59,7 @@ public class WorkerRunnableImplTest {
         ExecuteStopException ese = new ExecuteStopException("Test stop");
         doThrow(ise, ese).when(worker).execute(any(WorkerContext.class));
         
-        WorkerRunnableImpl runnable = spy(new WorkerRunnableImpl("test-1", worker));
+        WorkerRunnableImpl runnable = spy(new WorkerRunnableImpl(1, "test-1", worker));
         
         assertThat(runnable.getState(), is(WorkerState.INITIAL));
 
@@ -78,7 +78,7 @@ public class WorkerRunnableImplTest {
         ExecuteStopException ese = new ExecuteStopException("Test stop");
         doThrow(ise, ese).when(worker).execute(any(WorkerContext.class));
         
-        WorkerRunnableImpl runnable = spy(new WorkerRunnableImpl("test-1", worker));
+        WorkerRunnableImpl runnable = spy(new WorkerRunnableImpl(1, "test-1", worker));
         runnable.setUnhandledThrowableDelay(millis(10L));
 
         // worker should execute exactly twice, with a delay in-between
@@ -95,7 +95,7 @@ public class WorkerRunnableImplTest {
         ExecuteStopException ese = new ExecuteStopException("Test stop");
         doNothing().doNothing().doThrow(ese).when(worker).execute(any(WorkerContext.class));
         
-        WorkerRunnableImpl runnable = spy(new WorkerRunnableImpl("test-1", worker));
+        WorkerRunnableImpl runnable = spy(new WorkerRunnableImpl(1, "test-1", worker));
 
         // worker should execute exactly 3 times
         runnable.run();
@@ -110,7 +110,7 @@ public class WorkerRunnableImplTest {
         ExecuteStopException ese = new ExecuteStopException("Test stop");
         doNothing().doNothing().doThrow(ese).when(worker).execute(any(WorkerContext.class));
         
-        WorkerRunnableImpl runnable = spy(new WorkerRunnableImpl("test-1", worker));
+        WorkerRunnableImpl runnable = spy(new WorkerRunnableImpl(1, "test-1", worker));
         runnable.setExecuteDelay(millis(10L));
         
         // worker should execute exactly 3 times

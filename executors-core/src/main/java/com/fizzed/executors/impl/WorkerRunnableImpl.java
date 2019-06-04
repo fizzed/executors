@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 public class WorkerRunnableImpl<W extends Worker> implements Runnable, WorkerRunnable<W> {
     
     protected final Logger log;
+    protected final long id;
     protected final String name;
     protected final ReentrantLock lock;
     protected final W worker;
@@ -41,9 +42,11 @@ public class WorkerRunnableImpl<W extends Worker> implements Runnable, WorkerRun
     protected TimeDuration executeDelay;
 
     public WorkerRunnableImpl(
+            long id,
             String name,
             W worker) {
         
+        this.id = id;
         this.name = name;
         this.worker = worker;
         this.log = maybe(worker.getLogger()).orGet(() -> LoggerFactory.getLogger(this.getClass()));
@@ -54,6 +57,15 @@ public class WorkerRunnableImpl<W extends Worker> implements Runnable, WorkerRun
         this.initialDelay = null;
     }
 
+    @Override
+    public long getId() {
+        return id;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
     @Override
     public W getWorker() {
         return worker;
@@ -87,11 +99,6 @@ public class WorkerRunnableImpl<W extends Worker> implements Runnable, WorkerRun
     @Override
     public void setExecuteDelay(TimeDuration executeDelay) {
         this.executeDelay = executeDelay;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
     
     @Override
@@ -269,6 +276,11 @@ public class WorkerRunnableImpl<W extends Worker> implements Runnable, WorkerRun
     
     private class WorkerContextImpl implements WorkerContext {
 
+        @Override
+        public long getId() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+        
         @Override
         public String getName() {
             return WorkerRunnableImpl.this.getName();

@@ -27,7 +27,7 @@ public class WorkerServiceTest {
         }
 
         @Override
-        public TestWorker newWorker(String workerName) {
+        public TestWorker newWorker(long id, String name) {
             return spy(new TestWorker());
         }
         

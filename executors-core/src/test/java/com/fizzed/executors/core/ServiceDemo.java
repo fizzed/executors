@@ -16,7 +16,6 @@
 package com.fizzed.executors.core;
 
 import com.fizzed.crux.util.TimeDuration;
-import static com.fizzed.crux.util.TimeDuration.millis;
 import static com.fizzed.crux.util.TimeDuration.seconds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +52,7 @@ public class ServiceDemo {
         }
 
         @Override
-        public Consumer newWorker(String workerName) {
+        public Consumer newWorker(long id, String name) {
             return new Consumer();
         }
         

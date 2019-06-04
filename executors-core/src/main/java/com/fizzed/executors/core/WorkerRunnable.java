@@ -19,6 +19,10 @@ import com.fizzed.crux.util.TimeDuration;
 
 public interface WorkerRunnable<W extends Worker> {
 
+    long getId();
+    
+    String getName();
+    
     TimeDuration getInitialDelay();
 
     void setInitialDelay(TimeDuration initialDelay);
@@ -31,7 +35,7 @@ public interface WorkerRunnable<W extends Worker> {
     
     void setUnhandledThrowableDelay(TimeDuration unhandledThrowableDelay);
     
-    String getName();
+    
 
     String getMessage();
     

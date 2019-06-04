@@ -19,6 +19,8 @@ import com.fizzed.crux.util.TimeDuration;
 
 public interface WorkerContext {
  
+    long getId();
+    
     String getName();
     
     WorkerState getState();

@@ -40,6 +40,10 @@ public class NinjaPropertiesHelper {
         
         String v = ninjaProperties.get(key);
         
+        if (v == null) {
+            return null;
+        }
+        
         return Double.valueOf(v);
     }
     

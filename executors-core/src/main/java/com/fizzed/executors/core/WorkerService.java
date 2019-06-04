@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public abstract class WorkerService<W extends Worker> implements Service {
     
     protected Logger log;
-    protected final AtomicInteger workerIds;
+    protected final AtomicLong workerIds;
     private final CopyOnWriteArrayList<WorkerRunnable<W>> runnables;
     protected AtomicReference<ServiceState> stateRef;
     protected ScheduledThreadPoolExecutor executors;
@@ -46,7 +46,7 @@ public abstract class WorkerService<W extends Worker> implements Service {
     public WorkerService(
             String name) {
         
-        this.workerIds = new AtomicInteger();
+        this.workerIds = new AtomicLong();
         this.stateRef = new AtomicReference<>(ServiceState.STOPPED);
         this.name = name;
         this.minPoolSize = 1;
@@ -124,17 +124,18 @@ public abstract class WorkerService<W extends Worker> implements Service {
         return this.runnables;
     }
     
-    abstract public W newWorker(String workerName);
+    abstract public W newWorker(long workerId, String workerName);
     
     protected WorkerRunnableImpl<W> buildWorkerRunnable() {
-        final int id = this.workerIds.incrementAndGet();
+        final long workerId = this.workerIds.incrementAndGet();
         
-        final String workerName = this.name + "-" + id;
+        final String workerName = this.name + "-" + workerId;
         
-        final W worker = this.newWorker(workerName);
+        final W worker = this.newWorker(workerId, workerName);
         
         // build runnable that handles it
-        final WorkerRunnableImpl<W> runnable = new WorkerRunnableImpl<>(workerName, worker);
+        final WorkerRunnableImpl<W> runnable = new WorkerRunnableImpl<>(
+            workerId, workerName, worker);
 
         final TimeDuration _initialDelay = this.initialDelayStagger != null ?
             ExecuteHelper.staggered(this.getInitialDelay(), this.initialDelayStagger)
