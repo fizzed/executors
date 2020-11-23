@@ -43,4 +43,6 @@ public interface Service {
     
     void stop();
     
+    void shutdown();
+    
 }

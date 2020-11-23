@@ -21,6 +21,8 @@ import com.fizzed.crux.util.TimeDuration;
 import com.fizzed.executors.impl.WorkerRunnableImpl;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -183,22 +185,36 @@ public abstract class WorkerService<W extends Worker> implements Service {
         }
     }
     
-    @Override
-    public void stop() {
+    private boolean requestShutdown() {
+        // ignore if already stopped or stopping...
+        final ServiceState currentState = this.stateRef.get();
+        if (currentState == ServiceState.STOPPING || currentState == ServiceState.STOPPED) {
+            return false;
+        }
+        
         if (!this.stateRef.compareAndSet(ServiceState.STARTED, ServiceState.STOPPING)) {
             throw new IllegalStateException(this.name + ": service not currently started");
         }
         
-        final StopWatch timer = StopWatch.timeMillis();
-        try {
-            log.info("{}: service stopping...", this.name);
-            
-            this.executors.shutdown();
-            
-            this.runnables.forEach(runnable -> {
-                runnable.stop();
-            });
-            
+        log.info("{}: service stopping...", this.name);
+
+        this.executors.shutdown();
+
+        this.runnables.forEach(runnable -> {
+            runnable.stop();
+        });
+        
+        return true;
+    }
+    
+    private void awaitShutdown() {
+        // ignore if already stopped or stopping...
+        final ServiceState currentState = this.stateRef.get();
+        if (currentState == ServiceState.STOPPED) {
+            return;
+        }
+        
+        if (this.executors != null) {
             try {
                 if (!this.executors.awaitTermination(this.shutdownTimeout.getDuration(), this.shutdownTimeout.getUnit())) {
                     log.warn("{}: service did not shutdown gracefully, forcing stop now!", this.name);
@@ -209,13 +225,30 @@ public abstract class WorkerService<W extends Worker> implements Service {
                 log.warn("{}: service will now terminate with a likley un-orderly shutdown", this.name);
                 this.executors.shutdownNow();
             }
-            
-            log.info("{}: service stopped (in {})", this.name, timer);
-            this.executors = null;
-            this.stateRef.set(ServiceState.STOPPED);
-        } finally {
-            
+        }
+
+        log.info("{}: service stopped", this.name);
+        this.executors = null;
+        this.stateRef.set(ServiceState.STOPPED);
+    }
+    
+    @Override
+    public void stop() {
+        if (this.requestShutdown()) {
+            this.awaitShutdown();
         }
     }
 
+    @Override
+    public void shutdown() {
+        if (this.requestShutdown()) {
+            // asynchronously await for the shutdown now...
+            final ExecutorService shutdownExecutor = Executors.newSingleThreadExecutor();
+            shutdownExecutor.submit(() -> {
+                this.awaitShutdown();
+            });
+            shutdownExecutor.shutdown();
+        }
+    }
+    
 }
