@@ -52,7 +52,7 @@ public class ServiceDemo {
         }
 
         @Override
-        public Consumer newWorker(long id, String name) {
+        public Consumer newWorker() {
             return new Consumer();
         }
         

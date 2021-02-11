@@ -126,14 +126,21 @@ public abstract class WorkerService<W extends Worker> implements Service {
         return this.runnables;
     }
     
-    abstract public W newWorker(long workerId, String workerName);
+    public int getRunningCount() {
+        return (int)this.getRunnables()
+            .stream()
+            .filter(v -> v.getState() == WorkerState.RUNNING)
+            .count();
+    }
     
-    protected WorkerRunnableImpl<W> buildWorkerRunnable() {
+    abstract protected W newWorker();
+    
+    protected WorkerRunnableImpl<W> newWorkerRunnable() {
         final long workerId = this.workerIds.incrementAndGet();
         
         final String workerName = this.name + "-" + workerId;
         
-        final W worker = this.newWorker(workerId, workerName);
+        final W worker = this.newWorker();
         
         // build runnable that handles it
         final WorkerRunnableImpl<W> runnable = new WorkerRunnableImpl<>(
@@ -171,7 +178,7 @@ public abstract class WorkerService<W extends Worker> implements Service {
                 });
             
             for (int i = 0; i < this.minPoolSize; i++) {
-                final WorkerRunnableImpl<W> runnable = this.buildWorkerRunnable();
+                final WorkerRunnableImpl<W> runnable = this.newWorkerRunnable();
                 
                 this.runnables.add(runnable);
 

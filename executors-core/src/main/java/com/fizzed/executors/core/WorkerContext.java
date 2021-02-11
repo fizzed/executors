@@ -30,11 +30,15 @@ public interface WorkerContext {
     //void stop();
     
     default void idle() throws ExecuteStopException, InterruptedException {
-        this.idle((TimeDuration)null, (String)null);
+        this.idle("Idle");
     }
     
     default void idle(TimeDuration duration) throws ExecuteStopException, InterruptedException {
         this.idle(duration, (String)null);
+    }
+    
+    default void idle(String message) throws ExecuteStopException, InterruptedException {
+        this.idle((TimeDuration)null, message);
     }
     
     void idle(TimeDuration duration, String message) throws ExecuteStopException, InterruptedException;
@@ -45,19 +49,17 @@ public interface WorkerContext {
     
     void running(String message) throws ExecuteStopException;
     
-    default void running(ExecuteRunnable runnable) throws ExecuteStopException, InterruptedException {
-        this.running((String)null, runnable);
+    default void running(Executable executable) throws ExecuteStopException, InterruptedException {
+        this.running((String)null, executable);
     }
     
-    default void running(String message, ExecuteRunnable runnable) throws ExecuteStopException, InterruptedException {
+    default void running(String message, Executable executable) throws ExecuteStopException, InterruptedException {
         this.running(message);
         try {
-            runnable.run();
+            executable.execute();
         } finally {
             this.idle();
         }
     }
-    
-//    void stop() throws ExecuteStopException;
     
 }

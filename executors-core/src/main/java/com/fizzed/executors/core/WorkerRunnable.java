@@ -34,8 +34,6 @@ public interface WorkerRunnable<W extends Worker> {
     TimeDuration getUnhandledThrowableDelay();
     
     void setUnhandledThrowableDelay(TimeDuration unhandledThrowableDelay);
-    
-    
 
     String getMessage();
     

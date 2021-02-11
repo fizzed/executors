@@ -16,6 +16,7 @@
 package com.fizzed.executors.core;
 
 public class ExecuteStopException extends Exception {
+    
     /**
      * Constructs an instance of <code>WorkerStopException</code> with the
      * specified detail message.

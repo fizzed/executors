@@ -15,8 +15,14 @@
  */
 package com.fizzed.executors.core;
 
-public interface ExecuteRunnable {
+import org.slf4j.Logger;
 
-    void run() throws ExecuteStopException, InterruptedException;
+public interface Processor<T> {
+    
+    default Logger getLogger() {
+        return null;
+    }
+
+    void execute(WorkerContext context, T task) throws ExecuteStopException, InterruptedException;
     
 }

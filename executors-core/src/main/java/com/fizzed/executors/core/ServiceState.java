@@ -17,7 +17,6 @@ package com.fizzed.executors.core;
 
 public enum ServiceState {
  
-    //DISABLED,
     STARTING,
     STARTED,
     STOPPING,

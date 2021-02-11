@@ -267,7 +267,11 @@ public class WorkerRunnableImpl<W extends Worker> implements Runnable, WorkerRun
         } catch (ExecuteStopException e) {
             //log.debug("{}: worker stopped", this.name);
         } catch (InterruptedException e) {
-            log.warn("{}: worker interrupted", this.name, e);
+            // were we interrupted b/c a stop was requested?
+            if (!this.isStopRequested()) {
+                // hmmm.. interrupted and we weren't actually stopped?
+                log.warn("{}: worker interrupted", this.name, e);
+            }
         } finally {
             this.setStopped("Stopped");
             this.threadRef.set(null);

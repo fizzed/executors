@@ -15,30 +15,8 @@
  */
 package com.fizzed.executors.core;
 
-public interface Service {
- 
-    ServiceState getState();
-    
-    default boolean isStarted() {
-        return this.getState() == ServiceState.STARTED;
-    }
-    
-    default boolean isStarting() {
-        return this.getState() == ServiceState.STARTING;
-    }
-    
-    default boolean isStopped() {
-        return this.getState() == ServiceState.STOPPED;
-    }
-    
-    default boolean isStopping() {
-        return this.getState() == ServiceState.STOPPING;
-    }
-    
-    void start();
-    
-    void stop();
-    
-    void shutdown();
+public interface Executable {
+
+    void execute() throws ExecuteStopException, InterruptedException;
     
 }
