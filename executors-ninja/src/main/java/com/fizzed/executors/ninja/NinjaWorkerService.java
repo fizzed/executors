@@ -5,14 +5,51 @@ import com.fizzed.executors.core.Worker;
 import com.fizzed.executors.core.WorkerService;
 import static com.fizzed.executors.ninja.NinjaPropertiesHelper.getDouble;
 import static com.fizzed.executors.ninja.NinjaPropertiesHelper.getTimeDuration;
+import com.google.inject.Injector;
 import java.util.concurrent.TimeUnit;
+import ninja.lifecycle.Dispose;
+import ninja.lifecycle.Start;
 import ninja.utils.NinjaProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-abstract public class NinjaWorkerService {
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+abstract public class NinjaWorkerService<W extends Worker> extends WorkerService<W> {
 
+    protected final NinjaProperties ninjaProperties;
+    protected final Injector injector;
+    protected final String configurationPrefix;
+    protected final Class<W> defaultWorkerType;
+    
+    public NinjaWorkerService(
+            String name,
+            NinjaProperties ninjaProperties,
+            Injector injector,
+            String configurationPrefix,
+            Class<W> defaultWorkerType) {
+        
+        super(name);
+        this.ninjaProperties = ninjaProperties;
+        this.injector = injector;
+        this.configurationPrefix = configurationPrefix;
+        this.defaultWorkerType = defaultWorkerType;
+        
+        // delegate most of configuration to helper method
+        NinjaWorkerService.configure(this.configurationPrefix, this.ninjaProperties, this);
+    }
+    
+    @Override
+    public W newWorker() {
+        return this.injector.getInstance(this.defaultWorkerType);
+    }
+
+    @Override @Start(order = 91)        // annotation triggers binds to ninja event
+    public void start() {
+        super.start();
+    }
+    
+    @Override @Dispose                  // annotation triggers binds to ninja event
+    public void stop() {
+        super.stop();
+    }
+    
     static public <W extends Worker> void configure(
             String configPrefix,
             NinjaProperties ninjaProperties,
