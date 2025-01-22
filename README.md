@@ -55,3 +55,20 @@ Pattern 2: poll then accept next job (e.g. JMS w/ manual ack)
         sleep(2 seconds)               // <-- interrupt ok
     }
 
+## Usage
+
+In your `pom.xml` add the following dependency:
+
+```xml
+<dependency>
+  <groupId>com.fizzed</groupId>
+  <artifactId>executors-core</artifactId>
+  <version>VERSION-HERE</version>
+</dependency>
+```
+
+## License
+
+Copyright (C) 2025 Fizzed, Inc.
+
+This work is licensed under the Apache License, Version 2.0. See LICENSE for details.
