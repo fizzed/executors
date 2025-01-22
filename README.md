@@ -63,7 +63,7 @@ In your `pom.xml` add the following dependency:
 <dependency>
   <groupId>com.fizzed</groupId>
   <artifactId>executors-core</artifactId>
-  <version>VERSION-HERE</version>
+  <version>0.0.5</version>
 </dependency>
 ```
 
